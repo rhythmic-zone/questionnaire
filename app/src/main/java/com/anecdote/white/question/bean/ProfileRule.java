@@ -14,6 +14,7 @@ import java.util.Map;
 
 /**
  * Created by 44260 on 2015/11/25.
+ * rule list
  */
 public class ProfileRule extends HashMap<String, String> {
 

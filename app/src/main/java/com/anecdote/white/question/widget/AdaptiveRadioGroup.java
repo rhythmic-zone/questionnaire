@@ -9,6 +9,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -20,7 +21,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-
 
 import com.anecdote.white.question.R;
 
@@ -128,23 +128,24 @@ public class AdaptiveRadioGroup extends ViewGroup {
 
     }
 
-    private void initComponent(Integer defaultIndex) {
+    private void initComponent(int defaultIndex) {
         List<Integer> list = new ArrayList<>();
         list.add(defaultIndex);
         initComponent(list);
     }
 
+
     private void initComponent(List<Integer> defaultIndexs) {
         removeAllViews();
         if (content == null || content.size() == 0) {
             Item item = new Item();
-//			item.setDescription("unChecked");
+            item.setDescription("");
             item.setValue("B");
             item.setDisplayContent(item.getValue() + "、" + item.getDescription());
             addItem(item, false);
 
             item = new Item();
-//			item.setDescription("checked");
+            item.setDescription("");
             item.setValue("A");
             item.setDisplayContent(item.getValue() + "、" + item.getDescription());
             addItem(item, true);
@@ -170,6 +171,8 @@ public class AdaptiveRadioGroup extends ViewGroup {
             final EditText editText = new EditText(getContext());
             params.weight = 1;
             editText.setLayoutParams(params);
+            editText.setTag("___");
+            editText.setText(item.getEditText());
             editText.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -188,6 +191,9 @@ public class AdaptiveRadioGroup extends ViewGroup {
                     InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(getWindowToken(), 0);
                     item.setValue(editText.getText().toString());
+                    item.setEditText(editText.getText().toString());
+                    callBackAll();
+                    callItemClickBack();
                 }
             });
             linearLayout.addView(editText);
@@ -235,6 +241,7 @@ public class AdaptiveRadioGroup extends ViewGroup {
                         else {
                             callBackAll();
                         }
+                        callItemClickBack();
                     }
                 }
             });
@@ -251,9 +258,19 @@ public class AdaptiveRadioGroup extends ViewGroup {
             mOnCheckedValueChangeListener.onCheckedValueChange(getItemByValue((String) cb.getTag()));
     }
 
+    @SuppressWarnings("must be last called")
+    private void callItemClickBack() {
+        if (onItemClickListener != null) {
+            onItemClickListener.onItemClick();
+        }
+    }
+
     private void callBackAll() {
-        if (onCheckedObtainAllValueListener != null)
-            onCheckedObtainAllValueListener.onObtainAllValue(getItemByValue(getAllBox(this)));
+        if (onCheckedObtainAllValueListener != null) {
+            callBackList.clear();
+            obtainItem(this);
+            onCheckedObtainAllValueListener.onObtainAllValue(callBackList);
+        }
     }
 
     private void clearAll(ViewGroup viewGroup) {
@@ -266,17 +283,25 @@ public class AdaptiveRadioGroup extends ViewGroup {
         }
     }
 
-    private List<CheckBox> getAllBox(ViewGroup viewGroup) {
-        List<CheckBox> list = new ArrayList<>();
+    private List<Item> callBackList = new ArrayList<>();
+
+    private void obtainItem(ViewGroup viewGroup) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
             if (viewGroup.getChildAt(i) instanceof CheckBox) {
-                list.add((CheckBox) viewGroup.getChildAt(i));
+                CheckBox checkBox = (CheckBox) viewGroup.getChildAt(i);
+                if (checkBox.isChecked() && getItemByValue((String) checkBox.getTag()) != null)
+                    callBackList.add(getItemByValue((String) checkBox.getTag()));
+            } else if (viewGroup.getChildAt(i) instanceof EditText) {
+                EditText editText = (EditText) viewGroup.getChildAt(i);
+                if (editText != null && editText.getText() != null && !TextUtils.isEmpty(editText.getText().toString()) && getItemByMode(true) != null) {
+                    callBackList.add(getItemByMode(true));
+                }
             } else if (viewGroup.getChildAt(i) instanceof ViewGroup) {
-                clearAll((ViewGroup) viewGroup.getChildAt(i));
+                obtainItem((ViewGroup) viewGroup.getChildAt(i));
             }
         }
-        return list;
     }
+
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -352,40 +377,37 @@ public class AdaptiveRadioGroup extends ViewGroup {
         return maxHeight;
     }
 
-    public Item getCheckedItem() {
-        for (int i = 0; i < getChildCount(); i++) {
-            if (getChildAt(i) instanceof CheckBox) {
-                CheckBox cb = (CheckBox) getChildAt(i);
-                if (cb.isChecked()) {
-                    return getItemByValue((String) cb.getTag());
-                }
-            }
-        }
-        return null;
+
+    private OnCheckedValueChangeListener mOnCheckedValueChangeListener;
+    private OnCheckedObtainAllValueListener onCheckedObtainAllValueListener;
+    private OnItemClickListener onItemClickListener;
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
     }
 
-    private onCheckedValueChangeListener mOnCheckedValueChangeListener;
-    private onCheckedObtainAllValueListener onCheckedObtainAllValueListener;
-
-    public void setOnCheckedValueChangeListener(onCheckedValueChangeListener mOnCheckedValueChangeListener) {
+    public void setOnCheckedValueChangeListener(OnCheckedValueChangeListener mOnCheckedValueChangeListener) {
         this.mOnCheckedValueChangeListener = mOnCheckedValueChangeListener;
     }
 
-    public void setOnCheckedObtainAllValueListener(onCheckedObtainAllValueListener onCheckedObtainAllValueListener) {
+    public void setOnCheckedObtainAllValueListener(OnCheckedObtainAllValueListener onCheckedObtainAllValueListener) {
         this.onCheckedObtainAllValueListener = onCheckedObtainAllValueListener;
     }
 
-    public AdaptiveRadioGroup setRadioMode(boolean isRadioMode) {
+    public void setRadioMode(boolean isRadioMode) {
         this.isRadioMode = isRadioMode;
-        return this;
     }
 
-    public interface onCheckedValueChangeListener {
+    public interface OnCheckedValueChangeListener {
         void onCheckedValueChange(Item item);
     }
 
-    public interface onCheckedObtainAllValueListener {
+    public interface OnCheckedObtainAllValueListener {
         void onObtainAllValue(List<Item> items);
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick();
     }
 
     /**
@@ -401,25 +423,29 @@ public class AdaptiveRadioGroup extends ViewGroup {
         return null;
     }
 
-    private List<Item> getItemByValue(@NonNull List<CheckBox> checkBoxes) {
+    private Item getItemByMode(boolean isEdit) {
         if (content == null || content.size() == 0) return null;
-        List<Item> list = new ArrayList<>();
-        for (int i = 0; i < checkBoxes.size(); i++) {
-            if (getItemByValue((String) checkBoxes.get(i).getTag()) != null)
-                list.add(getItemByValue((String) checkBoxes.get(i).getTag()));
+        for (Item item : content) {
+            if (item.isEdit == isEdit) return item;
         }
-        return list;
+        return null;
     }
+
 
     public class Item {
         private String value;
         private String description;
         private String displayContent;
         private boolean isEdit = false;
+        private String editText = "";
 
         public Item setIsEdit(boolean isEdit) {
             this.isEdit = isEdit;
             return this;
+        }
+
+        public boolean isEdit() {
+            return this.isEdit;
         }
 
         /**
@@ -470,6 +496,14 @@ public class AdaptiveRadioGroup extends ViewGroup {
             this.displayContent = displayContent;
         }
 
+        public String getEditText() {
+            return editText;
+        }
+
+        public Item setEditText(String editText) {
+            this.editText = editText;
+            return this;
+        }
     }
 
 }

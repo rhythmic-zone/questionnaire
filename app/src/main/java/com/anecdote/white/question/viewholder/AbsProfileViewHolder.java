@@ -9,15 +9,15 @@ import com.anecdote.white.question.bean.ProfileRule;
 
 public abstract class AbsProfileViewHolder<T extends Profile> extends RecyclerView.ViewHolder {
 
-
+    protected ProfileRule.ObtainProfileListener obtainProfileListener;
     public AbsProfileViewHolder(View itemView) {
         super(itemView);
     }
 
     public abstract void fillView(T t);
 
-    public void fillView(T t, ProfileRule.ObtainProfileListener listener){
-
+    public void setObtainProfileListener(ProfileRule.ObtainProfileListener obtainProfileListener){
+        this.obtainProfileListener = obtainProfileListener;
     }
 
 

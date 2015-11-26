@@ -8,12 +8,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
 /**
  * Created by 44260 on 2015/11/24.
+ * profile bean
  */
 public class Profile implements NetParser {
     private String profileKey;
@@ -24,7 +24,7 @@ public class Profile implements NetParser {
     protected int showType;
     private String originRule;
     private List<ProfileRule> ruleList;
-    public static final String TYPE_EDIT="___";
+    public static final String TYPE_EDIT = "___";
 
     public int getShowType() {
         return showType;
@@ -130,7 +130,7 @@ public class Profile implements NetParser {
         return null;
     }
 
-    public static List<Profile> createQAHealthList(JSONArray ja) {
+    public static List<Profile> createProfile(JSONArray ja) {
 
         List<Profile> profileList = null;
         try {
@@ -231,11 +231,21 @@ public class Profile implements NetParser {
     }
 
     private void parseRuleList() {
+        if (originRule == null)
+            return;
         try {
             JSONArray jsonArray = new JSONArray(originRule);
             ruleList = ProfileRule.createProfileRules(jsonArray);
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    protected String parseEncode(String desc) {
+        return desc.replaceAll("，", ",");
+    }
+
+    protected String parseDecode(String desc) {
+        return desc.replaceAll(",", "，");
     }
 }

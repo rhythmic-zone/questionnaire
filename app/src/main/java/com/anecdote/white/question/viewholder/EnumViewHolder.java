@@ -5,11 +5,16 @@ import android.widget.TextView;
 
 import com.anecdote.white.question.R;
 import com.anecdote.white.question.bean.EnumProfile;
+import com.anecdote.white.question.bean.EventProfile;
 import com.anecdote.white.question.bean.Profile;
+import com.anecdote.white.question.dev.Dev;
 import com.anecdote.white.question.widget.AdaptiveRadioGroup;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import de.greenrobot.event.EventBus;
 
 public class EnumViewHolder extends AbsProfileViewHolder<EnumProfile> {
 
@@ -28,13 +33,17 @@ public class EnumViewHolder extends AbsProfileViewHolder<EnumProfile> {
         if (item == null)
             return;
         tvTitle.setText(item.getTitle());
+        tvTitle.append("extra=>"+item.getExtra()+",");
+        if (item.getRuleList() != null && item.getRuleList().size() > 0) {
+            tvTitle.append("isShown:"+item.isShown(obtainProfileListener)+",rule:" + Arrays.toString(item.getRuleList().toArray()));
+        }
         int checkPos = -1;
         List<AdaptiveRadioGroup.Item> list = new ArrayList<>();
         for (int i = 0; i < item.getChoiceItemDescription().length; i++) {
             AdaptiveRadioGroup.Item mItem = mAdaptiveRadioGroup.new Item();
             mItem.setDescription(item.getChoiceItemDescription()[i]);
             mItem.setValue(item.getChoiceItem()[i]);
-            mItem.setDisplayContent(item.getChoiceItemDescription()[i]);
+            mItem.setDisplayContent(item.getChoiceItem()[i] + (item.getChoiceItemDescription()[i] == null ? "" : "、" + item.getChoiceItemDescription()[i]));
             if (item.getProfileValue() != null && item.getChoiceItem()[i] != null && item.getChoiceItem()[i].equals(item.getProfileValue())) {
                 checkPos = i;
             }
@@ -46,20 +55,19 @@ public class EnumViewHolder extends AbsProfileViewHolder<EnumProfile> {
             else mItem.setIsEdit(false);
             list.add(mItem);
         }
-        mAdaptiveRadioGroup.setRadioMode(false);
         mAdaptiveRadioGroup.setContent(list, checkPos);
-        mAdaptiveRadioGroup.setOnCheckedObtainAllValueListener(new AdaptiveRadioGroup.onCheckedObtainAllValueListener() {
+        mAdaptiveRadioGroup.setOnItemClickListener(new AdaptiveRadioGroup.OnItemClickListener() {
             @Override
-            public void onObtainAllValue(List<AdaptiveRadioGroup.Item> items) {
-                StringBuilder buffer = new StringBuilder();
-                if (items == null)
+            public void onItemClick() {
+                EventBus.getDefault().post(new EventProfile());
+            }
+        });
+        mAdaptiveRadioGroup.setOnCheckedValueChangeListener(new AdaptiveRadioGroup.OnCheckedValueChangeListener() {
+            @Override
+            public void onCheckedValueChange(AdaptiveRadioGroup.Item rItem) {
+                if (rItem == null)
                     return;
-                for (int i = 0; i < items.size(); i++) {
-                    buffer.append(items.get(i).getValue());
-                    if (i != items.size() - 1)
-                        buffer.append(",");
-                }
-                item.setProfileValue(buffer.toString());
+                item.setProfileValue(rItem.getValue());
             }
         });
     }

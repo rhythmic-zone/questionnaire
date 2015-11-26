@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.anecdote.white.question.R;
+import com.anecdote.white.question.bean.EventProfile;
 import com.anecdote.white.question.bean.Profile;
 import com.anecdote.white.question.bean.ProfileRule;
 import com.anecdote.white.question.bean.ShowType;
@@ -19,7 +20,10 @@ import com.anecdote.white.question.viewholder.NumberPickerViewHolder;
 import com.anecdote.white.question.viewholder.TextViewHolder;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+
+import de.greenrobot.event.EventBus;
 
 public class ProfileAdapter extends RecyclerView.Adapter<AbsProfileViewHolder> {
 
@@ -29,13 +33,31 @@ public class ProfileAdapter extends RecyclerView.Adapter<AbsProfileViewHolder> {
 
     public ProfileAdapter(Context context) {
         this.context = context;
+        EventBus.getDefault().register(this);
     }
 
 
-    public void setContent(List<Profile> list) {
-        this.originList = list;
+    public void onEventMainThread(EventProfile eventProfile) {
         fillShow();
         notifyDataSetChanged();
+    }
+
+    public void setContent(List<Profile> list) {
+        this.originList = list;
+        filterIllegal();
+        fillShow();
+        notifyDataSetChanged();
+    }
+
+    private void filterIllegal() {
+        if (originList == null)
+            return;
+        Iterator<Profile> iterator = originList.listIterator();
+        while (iterator.hasNext()) {
+            Profile profile = iterator.next();
+            if (profile == null)
+                iterator.remove();
+        }
     }
 
     private void fillShow() {
@@ -43,9 +65,8 @@ public class ProfileAdapter extends RecyclerView.Adapter<AbsProfileViewHolder> {
             return;
         list.clear();
         for (int i = 0; i < originList.size(); i++) {
-            Profile item = originList.get(i);
-            if (item.isShown(listener))
-                list.add(item);
+            if (originList.get(i).isShown(listener))
+                list.add(originList.get(i));
         }
     }
 
@@ -56,9 +77,8 @@ public class ProfileAdapter extends RecyclerView.Adapter<AbsProfileViewHolder> {
                 return null;
             }
             for (int i = 0; i < originList.size(); i++) {
-                Profile item = originList.get(i);
-                if (item != null && item.getProfileKey().equals(profileKey))
-                    return item;
+                if (originList.get(i) != null && originList.get(i).getProfileKey().equals(profileKey))
+                    return originList.get(i);
             }
             return null;
         }
@@ -93,6 +113,7 @@ public class ProfileAdapter extends RecyclerView.Adapter<AbsProfileViewHolder> {
             default:
                 holder = new TextViewHolder(LayoutInflater.from(context).inflate(R.layout.list_item_profile_text, null));
         }
+        holder.setObtainProfileListener(listener);
         holder.itemView.setLayoutParams(new RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.MATCH_PARENT));
         return holder;
     }
@@ -108,9 +129,8 @@ public class ProfileAdapter extends RecyclerView.Adapter<AbsProfileViewHolder> {
     @Override
     public int getItemViewType(int position) {
         if (list != null) {
-            Profile profile = list.get(position);
-            if (profile != null)
-                return profile.getShowType();
+            if (list.get(position) != null)
+                return list.get(position).getShowType();
         }
         return super.getItemViewType(position);
     }
@@ -121,5 +141,8 @@ public class ProfileAdapter extends RecyclerView.Adapter<AbsProfileViewHolder> {
         return list == null ? 0 : list.size();
     }
 
+    public void unit() {
+        EventBus.getDefault().unregister(this);
+    }
 
 }

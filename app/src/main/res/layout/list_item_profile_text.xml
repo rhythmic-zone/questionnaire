@@ -26,11 +26,6 @@
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
-            <View
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:background="#A4A3A4" />
-
             <EditText
                 android:id="@+id/et_input"
                 android:layout_width="wrap_content"

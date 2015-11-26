@@ -23,14 +23,18 @@
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
             <Button
-                style="?android:attr/buttonBarButtonStyle"
+                android:id="@+id/obtain"
+                android:layout_gravity="right|center_vertical"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="obtain"
+                android:layout_height="50dp"
+                android:textSize="18sp"
+                android:background="@color/trans_light"
+                android:textColor="#FFFFFF"
                 android:text="obtain" />
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
+                android:clickable="true"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"

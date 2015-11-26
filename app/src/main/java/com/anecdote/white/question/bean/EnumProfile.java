@@ -11,6 +11,7 @@ public class EnumProfile extends Profile {
 
     private String[] choiceItem;
     private String[] choiceItemDescription;
+    private String extra;
 
 
     public EnumProfile() {
@@ -45,10 +46,6 @@ public class EnumProfile extends Profile {
         }
     }
 
-    private static String parseEncode(String desc) {
-        return desc.replaceAll("%2C", ",");
-    }
-
     public String[] getChoiceItem() {
         return choiceItem;
     }
@@ -68,5 +65,15 @@ public class EnumProfile extends Profile {
     @Override
     public String toString() {
         return Arrays.toString(choiceItemDescription) + "\n" + Arrays.toString(choiceItem) + "\n" + super.toString();
+    }
+
+    public String getExtra() {
+        if(extra!=null)parseDecode(extra);
+        return extra;
+    }
+
+    public EnumProfile setExtra(String extra) {
+        this.extra = extra;
+        return this;
     }
 }

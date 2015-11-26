@@ -8,7 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Response;
@@ -17,6 +17,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.anecdote.white.question.adapter.ProfileAdapter;
+import com.anecdote.white.question.animator.SlideInLeftAnimator;
 import com.anecdote.white.question.bean.Profile;
 
 import org.json.JSONArray;
@@ -37,7 +38,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_qa_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        findViewById(R.id.obtain).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                obtain(v);
+            }
+        });
         recyclerView = (RecyclerView) findViewById(R.id.rv);
+        recyclerView.setItemAnimator(new SlideInLeftAnimator());
         adapter = new ProfileAdapter(getBaseContext());
         recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
         recyclerView.setAdapter(adapter);
@@ -53,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         Volley.newRequestQueue(getBaseContext()).add(new JsonArrayRequest("http://192.168.137.1/question", new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
-                profileList = Profile.createQAHealthList(response);
+                profileList = Profile.createProfile(response);
                 adapter.setContent(profileList);
             }
         }, new Response.ErrorListener() {
@@ -80,11 +88,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void tryChangeDomain() {
-        Volley.newRequestQueue(getBaseContext()).add(new JsonArrayRequest("http://archive.sinaapp.com/question/", new Response.Listener<JSONArray>() {
+        Volley.newRequestQueue(getBaseContext()).add(new JsonArrayRequest("http://imagination.ga/question/", new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
                 Snackbar.make(recyclerView, "从云服务器获取成功", Snackbar.LENGTH_SHORT).show();
-                profileList = Profile.createQAHealthList(response);
+                profileList = Profile.createProfile(response);
                 adapter.setContent(profileList);
             }
         }, new Response.ErrorListener() {
@@ -137,14 +145,10 @@ public class MainActivity extends AppCompatActivity {
         else {
             for (int i = 0; i < profileList.size(); i++) {
                 Profile profile = profileList.get(i);
-                buffer.append("").append(profile.getProfileKey()).append("--").append(profile.getProfileValue());
+                buffer.append("").append(profile.getProfileKey()).append("==>").append(profile.getProfileValue()).append("\n");
             }
         }
-        Snackbar.make(view, buffer.toString(), Snackbar.LENGTH_INDEFINITE).setAction("dismiss", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-            }
-        }).show();
+        Toast.makeText(getBaseContext(),buffer.toString(),Toast.LENGTH_SHORT).show();
 
     }
 }
